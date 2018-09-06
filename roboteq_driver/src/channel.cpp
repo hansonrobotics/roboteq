@@ -70,7 +70,7 @@ void Channel::cmdCallback(const roboteq_msgs::Command& command)
   {
     // Convert the commanded position in rads to encoder ticks.
     int roboteq_position = to_encoder_ticks(command.setpoint);
-    ROS_DEBUG_STREAM("Commanding " << roboteq_position << " position to motor driver.");
+//    ROS_DEBUG_STREAM("Commanding " << roboteq_position << " position to motor driver.");
 
     // Write command to the motor driver.
     controller_->command << "P" << channel_num_ << roboteq_position << controller_->send;

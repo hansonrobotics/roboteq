@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
   // Attempt to connect and run.
   while (ros::ok()) {
-    ROS_DEBUG("Attempting connection to %s at %i baud.", port.c_str(), baud);
+//    ROS_DEBUG("Attempting connection to %s at %i baud.", port.c_str(), baud);
     controller.connect();
     if (controller.connected()) {
       ros::AsyncSpinner spinner(1);
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
       }
       spinner.stop();
     } else {
-      ROS_DEBUG("Problem connecting to serial device.");
+//      ROS_DEBUG("Problem connecting to serial device.");
       ROS_ERROR_STREAM_ONCE("Problem connecting to port " << port << ". Trying again every 1 second.");
       sleep(1);
     }  

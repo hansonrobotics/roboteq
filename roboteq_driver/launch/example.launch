@@ -3,5 +3,6 @@
   <node pkg="roboteq_driver" type="driver_node" name="roboteq_driver" output="screen">
     <param name="port" value="$(arg port)" />
     <param name="baud" value="115200" />
+    <param name="channels" type="yaml" value="['left_wheel','right_wheel']"/>
   </node>
 </launch>
