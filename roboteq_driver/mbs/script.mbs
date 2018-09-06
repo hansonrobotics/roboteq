@@ -1,5 +1,5 @@
-SCRIPT_VER=28
-MAX_CHANNELS=1
+SCRIPT_VER=29
+MAX_CHANNELS=2
 Dim last_mode[2] as Integer
 
 ' Mode values are:
@@ -11,34 +11,35 @@ Dim last_mode[2] as Integer
 last_mode[0] = -127
 setcommand(_VAR, 1, -1)
 
-' Motor controller configuration. Much of this is particular to Grizzly
-' and can be generalized/parameterized as the need arises. Page numbers
-' are a reference to this document:
-' www.roboteq.com/index.php/docman/motor-controllers-documents-and-files/documentation/user-manual/7-nextgen-controllers-user-manual/file
+' Motor controller configuration. Much of this is particular to SDC2160
+' and can be generalized/parameterized as the need arises. 
+' https://www.roboteq.com/index.php/docman/motor-controllers-documents-and-files/documentation/datasheets/sdc21xx-datasheet/63-sdc21xx-datasheet/file
+' Commands are referenced in this document:
+'https://www.roboteq.com/index.php/docman/motor-controllers-documents-and-files/documentation/user-manual/272-roboteq-controllers-user-manual-v17/file
 
-setconfig(_ECHOF, 1) ' Serial echo off (p195)
-setconfig(_RWD, 110) ' Watchdog timeout, milliseconds (p195)
+setconfig(_ECHOF, 1) ' Serial echo off
+setconfig(_RWD, 110) ' Watchdog timeout, milliseconds
 setconfig(_AMOD, 1, 1) ' Analog input 1 absolute mode
 setconfig(_AMOD, 2, 1) ' Analog input 2 absolute mode
 
-' Undervoltage/overvoltage limits (p214)
-setconfig(_OVL, 700)
-setconfig(_UVL, 280)
+' Undervoltage/overvoltage limits 
+setconfig(_OVL, 620)
+setconfig(_UVL, 100)
 
 for ch = 1 andwhile ch <= MAX_CHANNELS evaluate ch++
-	' Encoder, speed config (p208, p221)
-	setconfig(_EMOD, ch, 50)
-	setconfig(_EPPR, ch, 1024)
-	setconfig(_MXRPM, ch, 3500)
-	setconfig(_CLERD, ch, 0)
+	setconfig(_EMOD, ch, 50)  ' encoder usage 
+	setconfig(_EPPR, ch, 1024) ' Encoder Pulses per revolution
+	setconfig(_MXRPM, ch, 3500) ' Maximal revolutions per minute
+	setconfig(_CLERD, ch, 0) ' Close loop error detection 
+  ' (e.g. 2 means more than 500ms of command feedback difference of 250)
 
-	' Current limit (p216)
-	setconfig(_ALIM, ch, 1500)
-	setconfig(_ATGA, ch, 2000)
-	setconfig(_ATGD, ch, 50)
-	setconfig(_ATRIG, ch, 0)
+	' Current limit 
+	setconfig(_ALIM, ch, 200) ' Maximum continuous current
+	setconfig(_ATGA, ch, 1) ' Amps trigger action 
+	setconfig(_ATGD, ch, 30000) ' Amps trigger delay
+	setconfig(_ATRIG, ch, 160) ' Amps trigger level 
 
-	' Max acceleration/deceleration (p219)
+	' Max acceleration/deceleration 
 	setconfig(_MAC, ch, 20000)
 	setconfig(_MDEC, ch, 20000)
 next
@@ -50,12 +51,12 @@ top:
 
 			' Motor to be stopped (high-Z).
 			if getvalue(_VAR, ch) = -1 then
-				setconfig(_MMOD, ch, 1)
-				setconfig(_KP, ch, 0)
-				setconfig(_KI, ch, 0)
-				setconfig(_KD, ch, 0)
-				setconfig(_ICAP, ch, 0)
-				setcommand(_G, ch, 0)
+				setconfig(_MMOD, ch, 1) ' Operating mode 
+				setconfig(_KP, ch, 0) ' PID proportional gain
+				setconfig(_KI, ch, 0) ' PID integral gain
+				setconfig(_KD, ch, 0) ' PID differential gain
+				setconfig(_ICAP, ch, 0) ' PID integral gap
+				setcommand(_G, ch, 0) ' Set speed or relative position
 			end if
 
 			' Motor in velocity-control mode.
