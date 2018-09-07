@@ -76,9 +76,10 @@ void Controller::connect() {
       setSerialEcho(false);
       flush();
     } catch (serial::IOException) {
+      ROS_ERROR("failed to open serial port");
     }
 
-    if (serial_->isOpen()) {
+    if (serial_->isOpen()) { 
       connected_ = true;
       return;
     } else {
@@ -91,10 +92,10 @@ void Controller::connect() {
 }
 
 void Controller::read() {
-  ROS_DEBUG_STREAM_NAMED("serial", "Bytes waiting: " << serial_->available());
+  ROS_DEBUG_STREAM_NAMED("serial.read", "Bytes waiting: " << serial_->available());
   std::string msg = serial_->readline(max_line_length, eol);
   if (!msg.empty()) {
-    ROS_DEBUG_STREAM_NAMED("serial", "RX: " << msg);
+    ROS_DEBUG_STREAM_NAMED("serial.read", "RX: " << msg);
     if (msg[0] == '+' || msg[0] == '-') {
       // Notify the ROS thread that a message response (ack/nack) has arrived.
       boost::lock_guard<boost::mutex> lock(last_response_mutex_);
@@ -114,7 +115,7 @@ void Controller::read() {
       ROS_WARN_STREAM("Unknown serial message received: " << msg);
     }
   } else {
-    ROS_WARN_NAMED("serial", "Serial::readline() returned no data.");
+    ROS_WARN_NAMED("serial.read", "Serial::readline() returned no data.");
     if (!receiving_script_messages_) {
       if (start_script_attempts_ < 5) {
         start_script_attempts_++;
@@ -135,12 +136,12 @@ void Controller::read() {
 }
 
 void Controller::write(std::string msg) {
-  ROS_DEBUG_STREAM_NAMED("serial", "TX: " << msg);
+  ROS_DEBUG_STREAM_NAMED("serial.write.write", "TX: " << msg);
   tx_buffer_ << msg << eol;
 }
 
 void Controller::flush() {
-  ROS_DEBUG_STREAM_NAMED("serial", "TX: " << boost::algorithm::replace_all_copy(tx_buffer_.str(), "\r", "\\r"));
+  ROS_DEBUG_STREAM_NAMED("serial.write.flush", "TX: " << tx_buffer_.str());// boost::algorithm::replace_all_copy(tx_buffer_.str(), "\r", "\\r"));
   ssize_t bytes_written = serial_->write(tx_buffer_.str());
   if (bytes_written < tx_buffer_.tellp()) {
     ROS_WARN_STREAM("Serial write timeout, " << bytes_written << " bytes written of " << tx_buffer_.tellp() << ".");
@@ -176,8 +177,8 @@ void Controller::processStatus(std::string str) {
 
     msg.fault = boost::lexical_cast<int>(fields[2]);
     msg.status = boost::lexical_cast<int>(fields[3]);
-    msg.internal_voltage = boost::lexical_cast<int>(fields[4]);
-    msg.adc_voltage = boost::lexical_cast<int>(fields[5]);
+    msg.internal_voltage = boost::lexical_cast<int>(fields[4]) / 10; // in decivolts
+    msg.adc_voltage = boost::lexical_cast<int>(fields[5]) /1000 ; // in milivolts
     msg.ic_temperature = boost::lexical_cast<int>(fields[6]);
   } catch (std::bad_cast& e) {
     ROS_WARN("Failure parsing status data. Dropping message.");
@@ -190,7 +191,7 @@ void Controller::processStatus(std::string str) {
 void Controller::processFeedback(std::string msg) {
   std::vector<std::string> fields;
   boost::split(fields, msg, boost::algorithm::is_any_of(":"));
-  if (fields.size() != 11) {
+  if (fields.size() != 10) {
     ROS_WARN("Wrong number of feedback fields. Dropping message.");
     return;
   }
@@ -206,7 +207,7 @@ void Controller::processFeedback(std::string msg) {
   } else {
     ROS_WARN("Bad channel number. Dropping message.");
     return;
-  }
+  } 
 }
 
 bool Controller::downloadScript() {
