@@ -91,10 +91,10 @@ void Controller::connect() {
 }
 
 void Controller::read() {
-  //ROS_DEBUG_STREAM_NAMED("serial", "Bytes waiting: " << serial_->available());
+  ROS_DEBUG_STREAM_NAMED("serial", "Bytes waiting: " << serial_->available());
   std::string msg = serial_->readline(max_line_length, eol);
   if (!msg.empty()) {
-    //ROS_DEBUG_STREAM_NAMED("serial", "RX: " << msg);
+    ROS_DEBUG_STREAM_NAMED("serial", "RX: " << msg);
     if (msg[0] == '+' || msg[0] == '-') {
       // Notify the ROS thread that a message response (ack/nack) has arrived.
       boost::lock_guard<boost::mutex> lock(last_response_mutex_);
@@ -118,18 +118,18 @@ void Controller::read() {
     if (!receiving_script_messages_) {
       if (start_script_attempts_ < 5) {
         start_script_attempts_++;
-        //ROS_DEBUG("Attempt #%d to start MBS program.", start_script_attempts_);
+        ROS_DEBUG("Attempt #%d to start MBS program.", start_script_attempts_);
         startScript();
         flush();
       } else {
-        //ROS_DEBUG("Attempting to download MBS program.");
+        ROS_DEBUG("Attempting to download MBS program.");
         if (downloadScript()) {
           start_script_attempts_ = 0;
         }
         ros::Duration(1.0).sleep();
       }
     } else {
-      //ROS_DEBUG("Script is believed to be in-place and running, so taking no action.");
+      ROS_DEBUG("Script is believed to be in-place and running, so taking no action.");
     }
   }
 }
@@ -140,7 +140,7 @@ void Controller::write(std::string msg) {
 }
 
 void Controller::flush() {
-//  ROS_DEBUG_STREAM_NAMED("serial", "TX: " << boost::algorithm::replace_all_copy(tx_buffer_.str(), "\r", "\\r"));
+  ROS_DEBUG_STREAM_NAMED("serial", "TX: " << boost::algorithm::replace_all_copy(tx_buffer_.str(), "\r", "\\r"));
   ssize_t bytes_written = serial_->write(tx_buffer_.str());
   if (bytes_written < tx_buffer_.tellp()) {
     ROS_WARN_STREAM("Serial write timeout, " << bytes_written << " bytes written of " << tx_buffer_.tellp() << ".");
@@ -176,6 +176,8 @@ void Controller::processStatus(std::string str) {
 
     msg.fault = boost::lexical_cast<int>(fields[2]);
     msg.status = boost::lexical_cast<int>(fields[3]);
+    msg.internal_voltage = boost::lexical_cast<int>(fields[4]);
+    msg.adc_voltage = boost::lexical_cast<int>(fields[5]);
     msg.ic_temperature = boost::lexical_cast<int>(fields[6]);
   } catch (std::bad_cast& e) {
     ROS_WARN("Failure parsing status data. Dropping message.");
@@ -208,7 +210,7 @@ void Controller::processFeedback(std::string msg) {
 }
 
 bool Controller::downloadScript() {
-  //ROS_DEBUG("Commanding driver to stop executing script.");
+  ROS_DEBUG("Commanding driver to stop executing script.");
 
   // Stop the running script, flag us to start it up again after..
   stopScript();
@@ -220,16 +222,16 @@ bool Controller::downloadScript() {
   serial_->read();
 
   // Send SLD.
-  //ROS_DEBUG("Commanding driver to enter download mode.");
+  ROS_DEBUG("Commanding driver to enter download mode.");
   write("%SLD 321654987"); flush();
 
   // Look for special ack from SLD.
   for (int find_ack = 0; find_ack < 7; find_ack++) {
     std::string msg = serial_->readline(max_line_length, eol);
-    //ROS_DEBUG_STREAM_NAMED("serial", "HLD-RX: " << msg);
+    ROS_DEBUG_STREAM_NAMED("serial", "HLD-RX: " << msg);
     if (msg == "HLD\r") goto found_ack;
   }
-  //ROS_DEBUG("Could not enter download mode.");
+  ROS_DEBUG("Could not enter download mode.");
   return false;
   found_ack:
 
@@ -240,7 +242,7 @@ bool Controller::downloadScript() {
     write(line);
     flush();
     std::string ack = serial_->readline(max_line_length, eol);
-    //ROS_DEBUG_STREAM_NAMED("serial", "ACK-RX: " << ack);
+    ROS_DEBUG_STREAM_NAMED("serial", "ACK-RX: " << ack);
     if (ack != "+\r") return false;
     line_num++;
   }

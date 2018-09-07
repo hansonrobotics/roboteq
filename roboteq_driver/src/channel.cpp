@@ -42,8 +42,6 @@ Channel::Channel(int channel_num, std::string ns, Controller* controller) :
 
   // Don't start this timer until we've received the first motion command, otherwise it
   // can interfere with code download on device startup.
-  timeout_timer_ = nh_.createTimer(ros::Duration(0.1), &Channel::timeoutCallback, this);
-  timeout_timer_.stop();
 }
 
 void Channel::cmdCallback(const roboteq_msgs::Command& command)
@@ -70,7 +68,7 @@ void Channel::cmdCallback(const roboteq_msgs::Command& command)
   {
     // Convert the commanded position in rads to encoder ticks.
     int roboteq_position = to_encoder_ticks(command.setpoint);
-//    ROS_DEBUG_STREAM("Commanding " << roboteq_position << " position to motor driver.");
+    ROS_DEBUG_STREAM("Commanding " << roboteq_position << " position to motor driver.");
 
     // Write command to the motor driver.
     controller_->command << "P" << channel_num_ << roboteq_position << controller_->send;
@@ -82,15 +80,6 @@ void Channel::cmdCallback(const roboteq_msgs::Command& command)
 
   controller_->flush();
   last_mode_ = command.mode;
-}
-
-void Channel::timeoutCallback(const ros::TimerEvent&)
-{
-  // Sends stop command repeatedly at 10Hz when not being otherwise commanded. Sending
-  // repeatedly is a hedge against a lost serial message.
-  ROS_DEBUG("Commanding motor to stop due to user command timeout.");
-  controller_->command << "VAR" << channel_num_ << static_cast<int>(roboteq_msgs::Command::MODE_STOPPED) << controller_->send;
-  controller_->flush();
 }
 
 void Channel::feedbackCallback(std::vector<std::string> fields)
@@ -109,7 +98,6 @@ void Channel::feedbackCallback(std::vector<std::string> fields)
     msg.measured_position = from_encoder_ticks(boost::lexical_cast<double>(fields[6]));
     msg.supply_voltage = boost::lexical_cast<float>(fields[7]) / 10.0;
     msg.supply_current = boost::lexical_cast<float>(fields[8]) / 10.0;
-    msg.motor_temperature = boost::lexical_cast<int>(fields[9]) * 0.020153 - 4.1754;
     msg.channel_temperature = boost::lexical_cast<int>(fields[10]);
   }
   catch (std::bad_cast& e)

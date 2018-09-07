@@ -18,7 +18,7 @@ setcommand(_VAR, 1, -1)
 'https://www.roboteq.com/index.php/docman/motor-controllers-documents-and-files/documentation/user-manual/272-roboteq-controllers-user-manual-v17/file
 
 setconfig(_ECHOF, 1) ' Serial echo off
-setconfig(_RWD, 1500) ' Watchdog timeout, milliseconds
+setconfig(_RWD, 0) ' Watchdog timeout, milliseconds
 setconfig(_AMOD, 1, 1) ' Analog input 1 absolute mode
 setconfig(_AMOD, 2, 1) ' Analog input 2 absolute mode
 
@@ -27,7 +27,7 @@ setconfig(_OVL, 620)
 setconfig(_UVL, 100)
 
 for ch = 1 andwhile ch <= MAX_CHANNELS evaluate ch++
-	setconfig(_EMOD, ch, 50)  ' encoder usage 
+	setconfig(_EMOD, ch, 17)  ' encoder usage (50 = 17 + 33 = (16*mot1 + use) + (32*mot2 + use)) 
 	setconfig(_EPPR, ch, 1024) ' Encoder Pulses per revolution
 	setconfig(_MXRPM, ch, 3500) ' Maximal revolutions per minute
 	setconfig(_CLERD, ch, 0) ' Close loop error detection 
@@ -53,7 +53,7 @@ top:
 			if getvalue(_VAR, ch) = -1 then
 				setconfig(_MMOD, ch, 1) ' Operating mode 
 				setconfig(_KP, ch, 0) ' PID proportional gain
-				setconfig(_KI, ch, 0) ' PID integral gain
+          setconfig(_KI, ch, 0) ' PID integral gain
 				setconfig(_KD, ch, 0) ' PID differential gain
 				setconfig(_ICAP, ch, 0) ' PID integral gap
 				setcommand(_G, ch, 0) ' Set speed or relative position
@@ -101,7 +101,6 @@ PrintFeedback:
 	print(":", getvalue(_ABCNTR, ch))
 	print(":", getvalue(_VOLTS, 2))
 	print(":", getvalue(_BATAMPS, ch))
-	print(":", getvalue(_ANAIN, ch))
 	print(":", getvalue(_TEMP, ch+1))
 	print("\r")
 	Return
