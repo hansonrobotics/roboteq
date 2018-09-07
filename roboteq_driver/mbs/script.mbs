@@ -27,7 +27,7 @@ setconfig(_OVL, 620)
 setconfig(_UVL, 100)
 
 for ch = 1 andwhile ch <= MAX_CHANNELS evaluate ch++
-	setconfig(_EMOD, ch, 17)  ' encoder usage (50 = 17 + 33 = (16*mot1 + use) + (32*mot2 + use)) 
+	setconfig(_EMOD, ch, 50)  ' encoder usage (50 = 17 + 33 = (16*mot1 + use) + (32*mot2 + use)) 
 	setconfig(_EPPR, ch, 1024) ' Encoder Pulses per revolution
 	setconfig(_MXRPM, ch, 3500) ' Maximal revolutions per minute
 	setconfig(_CLERD, ch, 0) ' Close loop error detection 
